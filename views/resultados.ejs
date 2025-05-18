@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados: <%= encuesta.titulo %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --bg-light: #f9fafb;
+            --text-dark: #1f2937;
+            --text-light: #f3f4f6;
+            --border-color: #e5e7eb;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-light), #e0e7ff);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            color: var(--text-dark);
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 1.5rem 2rem;
+            color: var(--text-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: pulse 15s infinite linear;
+        }
+
+        @keyframes pulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .pregunta {
+            margin-bottom: 2rem;
+        }
+
+        .pregunta h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-bottom: 1.5rem;
+        }
+
+        .resumen {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f3f4f6;
+            border-radius: 8px;
+        }
+
+        .resumen span {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .resumen .correctas {
+            color: var(--secondary);
+        }
+
+        .resumen .incorrectas {
+            color: var(--danger);
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 640px) {
+            .content {
+                padding: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .chart-container {
+                height: 150px;
+            }
+
+            .resumen {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-chart-bar fa-fw"></i> Resultados: <%= encuesta.titulo %></h1>
+        </div>
+        <div class="content">
+            <% preguntas.forEach(function(p, index) { %>
+                <div class="pregunta">
+                    <h3><%= p.texto %></h3>
+                    <div class="chart-container">
+                        <canvas id="chart-<%= index %>"></canvas>
+                    </div>
+                    <div class="resumen">
+                        <%
+                            let correctas = 0;
+                            let incorrectas = 0;
+                            p.opciones.forEach(op => {
+                                if (op.es_correcta) {
+                                    correctas = op.votos;
+                                } else {
+                                    incorrectas += op.votos;
+                                }
+                            });
+                        %>
+                        <span class="correctas"><i class="fas fa-check-circle"></i> Respuestas correctas: <%= correctas %></span>
+                        <span class="incorrectas"><i class="fas fa-times-circle"></i> Respuestas incorrectas: <%= incorrectas %></span>
+                    </div>
+                </div>
+                <% if (index < preguntas.length - 1) { %>
+                    <hr>
+                <% } %>
+            <% }) %>
+        </div>
+    </div>
+
+    <script>
+        // Preparamos los datos de las preguntas y opciones en un solo objeto JS
+        const preguntasData = <%- JSON.stringify(
+          preguntas.map(p => ({
+            opciones: p.opciones.map(op => ({
+              texto: op.texto,
+              votos: op.votos,
+              es_correcta: op.es_correcta
+            }))
+          }))
+        ) %>;
+
+        preguntasData.forEach((p, index) => {
+          const ctx = document.getElementById(`chart-${index}`).getContext('2d');
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: p.opciones.map(op => op.texto),
+              datasets: [{
+                label: 'Votos',
+                data: p.opciones.map(op => op.votos),
+                backgroundColor: p.opciones.map(op => op.es_correcta ? '#10b981' : '#6366f1'),
+                borderColor: p.opciones.map(op => op.es_correcta ? '#0da271' : '#4f46e5'),
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    stepSize: 1,
+                    precision: 0
+                  },
+                  title: {
+                    display: true,
+                    text: 'Número de votos'
+                  }
+                },
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Opciones'
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  display: false
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      return `${context.raw} votos`;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        });
+    </script>
+</body>
+</html>
