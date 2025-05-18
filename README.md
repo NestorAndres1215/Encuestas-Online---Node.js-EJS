@@ -1,4 +1,4 @@
-```markdown
+
 # 🗳️ Encuestas Online - Node.js + EJS
 
 Este proyecto permite crear encuestas con múltiples preguntas y opciones. Cada pregunta puede tener una única opción correcta. Las encuestas se almacenan en una base de datos MySQL y se pueden responder posteriormente.
