@@ -22,21 +22,6 @@ Este proyecto permite crear encuestas con múltiples preguntas y opciones. Cada 
 - EJS
 - MySQL
 
----
-
-## 🏗️ Estructura del Proyecto
-
-📁 proyecto-encuestas/
-├── views/
-│   └── crearEncuesta.ejs        # Formulario dinámico para crear encuestas
-├── public/
-│   └── (Archivos estáticos si los necesitas)
-├── app.js                       # Configuración principal del servidor
-├── db.js                        # Conexión a la base de datos MySQL
-├── package.json
-
----
-
 ## 🧑‍💻 Instalación
 
 1. Clona el repositorio:
